@@ -5,8 +5,8 @@
 ssh user@143.248.6.83 (password: hubo)
 ssh railab@143.248.6.101/105 (password: railab)
 ssh user@143.248.6.168 (password: railab)
-ssh user@143.248.249.67/145/146 (password: raiboisKing)
-ssh user@143.248.249.108 (password: RaiboisKing)
+ssh user@143.248.249.145/146 (password: raiboisKing)
+ssh user@143.248.249.67/108 (password: RaiboisKing)
 ssh user@143.248.8.10 (password: raiboisKing)
 ssh user@143.248.247.189 (password: raiboisKing)
 ```
@@ -32,10 +32,12 @@ git clone git@github.com:railabatkaist/Railab_Manual.git
 cd Railab_Manual/raisim_docker
 
 nano Dockerfile 
-#modify 6006 to 4444  
+# modify 6006 to 4444  
+# You may check cuda version, ubuntu version of server
+# You may remove "-8" of "gcc-8 g++-8" if you have error
 
 nano runner.bash
-#modify 6006:6006 to 4444:4444, rsg to nkm  
+# modify 6006:6006 to 4444:4444, rsg to nkm  
 
 docker build -t nkm .
 # . to navigate `Railab_Manual/raisim_docker`  
@@ -69,11 +71,29 @@ nkm@user-TRX40-DESIGNARE:~$ docker attach nkm
 # then, root@4442112939a3:/# 
 ```
 
-- Some common commands
+- basic setting
+```
+update-alternatives --install /usr/bin/python python /usr/bin/python3 1
+
+apt update
+apt upgrade
+apt install libopencv-dev
+pip install "ruamel.yaml<0.18.0"
+pip install numpy==1.26.4 tensorboard==2.18.0
+pip install torch
+```
+
+- add raisim activation key
+```
+git clone git@github.com:KyeongminNam/RAILAB_setting.git
+mkdir /root/.raisim
+mv RAILAB_setting/activation.raisim /root/.raisim/
+```
+
+
+- Some useful commands
 ```
 python setup.py develop --CMAKE_PREFIX_PATH ../raisimLib/raisim/linux
-
-
 git checkout -- .
 
 ```
