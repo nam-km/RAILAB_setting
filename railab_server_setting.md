@@ -119,3 +119,26 @@ nkm@nkm-com2:~$ `scp aaa nkm@143.248.6.83`
 `scp -r /home/nkm/raisim_ws/raisimGymForSegway/raisimGymForSegway/data/raiway_sit_down_GRU_4/2025-02-13-11-48-37/ nkm@143.248.6.105:~/  `
 `scp -r raisimGymForSegway/data/raiway_sit_down_GRU_4/2025-02-24-11-46-04/ nkm@143.248.6.101:data_transfer/`
 
+
+## 2. Error
+
+#### 1) RuntimeError: No CUDA GPUs are available
+
+```
+pip uninstall torch torchvision torchaudio
+pip install torch torchvision torchaudio
+```
+
+```
+ls -l /tmp/.docker.xauth
+# total 0
+
+file /tmp/.docker.xauth
+# /tmp/.docker.xauth: directory
+
+sudo rm -rf /tmp/.docker.xauth
+sudo touch /tmp/.docker.xauth
+
+ls -l /tmp/.docker.xauth
+# -rw-r--r-- 1 root root 0 Jul 13 01:13 /tmp/.docker.xauth
+```
