@@ -9,6 +9,7 @@ ssh user@143.248.249.145/146 (password: raiboisKing)
 ssh user@143.248.249.67/108 (password: RaiboisKing)
 ssh user@143.248.8.10 (password: raiboisKing)
 ssh user@143.248.247.189 (password: raiboisKing)
+ssh user@143.248.247.137/138 (password: raiboisKing)
 ```
 - add my account `nkm`
 
@@ -33,8 +34,9 @@ cd Railab_Manual/raisim_docker
 
 nano Dockerfile 
 # modify 6006 to 4444  
-# You may check cuda version, ubuntu version of server
+# You may check cuda version, ubuntu version of server (11.8, 22.04)
 # You may remove "-8" of "gcc-8 g++-8" if you have error
+# You may change 3.9 to 3.10
 
 nano runner.bash
 # modify 6006:6006 to 4444:4444, rsg to nkm  
@@ -93,6 +95,7 @@ mv RAILAB_setting/activation.raisim /root/.raisim/
 
 - Some useful commands
 ```
+git clone git@github.com:KyeongminNam/raisimGymForSegway.git
 python setup.py develop --CMAKE_PREFIX_PATH ../raisimLib/raisim/linux
 git checkout -- .
 
