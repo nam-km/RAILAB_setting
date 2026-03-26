@@ -75,8 +75,15 @@ nkm@user-TRX40-DESIGNARE:~$ docker attach nkm
 
 - basic setting
 ```
-update-alternatives --install /usr/bin/python python /usr/bin/python3 1
+ls -l /usr/bin/python*
 
+ln -sf /usr/bin/python3.9 /usr/bin/python3
+ln -sf /usr/bin/python3.9 /usr/bin/python
+
+update-alternatives --install /usr/bin/python python /usr/bin/python3 python -V # python 3.9.5
+```
+
+```
 apt update
 apt upgrade
 apt install libopencv-dev
@@ -89,7 +96,7 @@ pip install torch
 ```
 git clone git@github.com:KyeongminNam/RAILAB_setting.git
 mkdir /root/.raisim
-mv RAILAB_setting/activation.raisim /root/.raisim/
+cp RAILAB_setting/activation.raisim /root/.raisim/
 ```
 
 
@@ -144,4 +151,25 @@ sudo touch /tmp/.docker.xauth
 
 ls -l /tmp/.docker.xauth
 # -rw-r--r-- 1 root root 0 Jul 13 01:13 /tmp/.docker.xauth
+```
+
+#### 2) failed fo create task for container
+- Error message :
+```
+nkm@user-desktop:~$ docker start nkm
+Error response from daemon: failed to create task for container: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: error during container init: error mounting "/tmp/.docker.xauth" to rootfs at "/tmp/.docker.xauth": create mountpoint for /tmp/.docker.xauth mount: cannot create subdirectories in "/var/lib/docker/overlay2/7faa27964b2a3673c74238eaf6cbbb60ce73fc7b99b46cfc39ebe307ac19e1cb/merged/tmp/.docker.xauth": not a directory: unknown: Are you trying to mount a directory onto a file (or vice-versa)? Check if the specified host path exists and is the expected type
+Error: failed to start containers: nkm
+```
+
+When you try
+```
+ls -ld /tmp/.docker.xauth
+file /tmp/.docker.xauth
+```
+then it will say `/tmp/.docker.xauth: directory`. It should be file, but is a directory. Then try :
+
+```
+sudo rm -rf /tmp/.docker.xauth
+touch /tmp/.docker.xauth
+chmod 644 /tmp/.docker.xauth
 ```
