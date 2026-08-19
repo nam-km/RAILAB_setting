@@ -1,0 +1,57 @@
+FROM nvidia/cuda:11.7.1-base-ubuntu22.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV LANG C.UTF-8
+RUN apt-get update && apt-get install -y git
+RUN apt-get install -y software-properties-common
+RUN apt-get update
+
+# ==================================================================
+# compiler
+# ------------------------------------------------------------------
+# 22.04 ships gcc-11; raisim2 headers need C++20 <span>, which libstdc++ provides from GCC 10.
+RUN apt-get install -y build-essential
+ENV CXX=/usr/bin/g++
+ENV CC=/usr/bin/gcc
+
+# ==================================================================
+# create working directories
+# ------------------------------------------------------------------
+ENV WORKSPACE=/raisim_ws
+RUN mkdir -p $WORKSPACE
+
+# ==================================================================
+# tools
+# ------------------------------------------------------------------
+# apt cmake on 22.04 is 3.22: satisfies raisim2Lib (>=3.18) and pybind11 2.10.4 (breaks on CMake 4.x).
+# libopencv-dev is required by find_package(OpenCV) in the raisimGym CMakeLists; curl by raisim_upgrade.sh.
+RUN apt-get install -y cmake python3.10-dev python3-pip libpython3.10-dev \
+                       libeigen3-dev libopencv-dev curl ca-certificates vim
+
+# ==================================================================
+# raisim2Lib
+# ------------------------------------------------------------------
+# Unlike raisimLib, this repo ships no binaries; raisim_upgrade.sh fetches the release into raisim/ and rayrai/.
+RUN cd $WORKSPACE && git clone https://github.com/raisimTech/raisim2Lib.git \
+    && cd raisim2Lib && ./raisim_upgrade.sh -y
+
+# Same effect as sourcing raisim_env.sh; note raisim2 uses a flat raisim/lib, not raisim/<OS>/lib.
+ENV RAISIM_DIR=$WORKSPACE/raisim2Lib
+ENV RAISIM_OS=linux
+ENV LD_LIBRARY_PATH=$WORKSPACE/raisim2Lib/raisim/lib:$WORKSPACE/raisim2Lib/rayrai/lib:$LD_LIBRARY_PATH
+
+# raisim_DIR is left unset on purpose: it overrides CMAKE_PREFIX_PATH and hides which raisim is used.
+# Clone raisimGym projects as siblings of raisim2Lib so their ../raisim2Lib/raisim path resolves.
+
+# ===================================================================
+# docker-speicific
+# ------------------------------------------------------------------
+RUN dpkg --add-architecture i386 && \
+    apt-get update && apt-get install -y --no-install-recommends \
+        libxau6 libxau6:i386 \
+        libxdmcp6 libxdmcp6:i386 \
+        libxcb1 libxcb1:i386 \
+        libxext6 libxext6:i386 \
+        libx11-6 libx11-6:i386 && \
+    rm -rf /var/lib/apt/lists/*
+
+EXPOSE 6006
