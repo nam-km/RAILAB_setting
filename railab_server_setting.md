@@ -25,24 +25,25 @@ exit
 # exit user and log in as nkm
 ssh-keygen
 cat .ssh/id_rsa.pub
-git clone git@github.com:railabatkaist/Railab_Manual.git
+git clone git@github.com:KyeongminNam/RAILAB_setting.git
 ```
 
 - modify Dockerfile, runner.bash  
+- put your name in [nkm]
 ```
-cd Railab_Manual/raisim_docker
+cd RAILAB_setting/server_setting
 
-nano Dockerfile 
+vim Dockerfile
 # modify 6006 to 4444  
 # You may check cuda version, ubuntu version of server (11.8, 22.04)
 # You may remove "-8" of "gcc-8 g++-8" if you have error
 # You may change 3.9 to 3.10
 
-nano runner.bash
-# modify 6006:6006 to 4444:4444, rsg to nkm  
+vim runner.bash
+# modify 6006:6006 to 4444:4444, rsg to nkm
 
 docker build -t nkm .
-# . to navigate `Railab_Manual/raisim_docker`  
+# . to navigate `RAILAB_setting/server_setting`  
 
 bash runner.bash
 
@@ -54,6 +55,18 @@ docker ps -a
 
 exit
 # back to local
+```
+
+- If you are using Raisim2
+```
+vim Dockerfile2
+vim runner.bash
+
+docker build -f Dockerfile2 -t nkm2 .
+bash runner.bash
+docker ps -a 
+docker rename loving_matsumoto nkm2
+docker ps -a
 ```
 
 - How to start docker
@@ -87,9 +100,24 @@ update-alternatives --install /usr/bin/python python /usr/bin/python3 python -V 
 apt update
 apt upgrade
 apt install libopencv-dev
-pip install "ruamel.yaml<0.18.0"
-pip install numpy==1.26.4 tensorboard==2.18.0
-pip install torch
+# pip install "ruamel.yaml<0.18.0" numpy==1.26.4 tensorboard==2.18.0
+pip install uv
+export UV_SYSTEM_PYTHON=1
+uv pip install torch torchvision torchaudio 
+uv pip install "ruamel.yaml<0.18" "numpy<2" tensorboard pygame matplotlib mplcursors
+
+# if you have cuda error
+uv pip install --system --reinstall torch --index-url https://download.pytorch.org/whl/cu128
+```
+
+if you only have raisim2Lib, and have setup.py error
+```
+mkdir -p /raisim_ws/raisimLib/thirdParty
+git clone -b v2.10.4 --depth 1 https://github.com/pybind/pybind11.git \
+  /raisim_ws/raisimLib/thirdParty/pybind11
+
+rm -rf build raisimGymForSegway.egg-info
+python setup.py develop --CMAKE_PREFIX_PATH /raisim_ws/raisim2Lib/raisim
 ```
 
 - add raisim activation key
@@ -104,6 +132,7 @@ cp RAILAB_setting/activation.raisim /root/.raisim/
 ```
 git clone git@github.com:KyeongminNam/raisimGymForSegway.git
 python setup.py develop --CMAKE_PREFIX_PATH ../raisimLib/raisim/linux
+python setup.py develop --CMAKE_PREFIX_PATH ../raisim2Lib/raisim/linux
 git checkout -- .
 
 ```
