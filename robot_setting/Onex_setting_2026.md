@@ -30,6 +30,10 @@ tar -xzf mcfly-*.tar.gz && sudo mv mcfly /usr/local/bin/
 ```
 mkdir -p ~/.config/terminator && cp files/onex/terminator/config ~/.config/terminator/
 ```
+- Claude Code:
+```
+curl -fsSL https://claude.ai/install.sh | bash
+```
 - GitHub SSH key (add the `.pub` to GitHub):
 ```
 git config --global user.name "<name>"

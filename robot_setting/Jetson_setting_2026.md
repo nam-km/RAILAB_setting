@@ -87,6 +87,10 @@ tar -xzf mcfly-*-aarch64-unknown-linux-gnu.tar.gz
 sudo mv mcfly /usr/local/bin/
 echo 'eval "$(mcfly init bash)"' >> ~/.bashrc
 ```
+- Claude Code (AI coding assistant in the terminal). It installs to `~/.local/bin/claude`; open a new terminal (or log out and in) if `claude` isn't found.
+```
+curl -fsSL https://claude.ai/install.sh | bash
+```
 - Git and SSH key: needed to clone the private GitHub repos. Add `id_ed25519.pub` to GitHub.
 ```
 git config --global user.name "<name>"
