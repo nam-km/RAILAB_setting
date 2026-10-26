@@ -88,7 +88,7 @@ raisimGymForSegway: python 3.9.19, torch 2.0.1, tensorboard 2.18.0, numpy 1.26.4
 ```
 sudo apt install git-all
 git config --global user.email twinhk@kaist.ac.kr
-git config --global user.name KyeongminNam
+git config --global user.name KyungminNam
 
 sudo apt install cmake minizip ffmpeg libeigen3-dev
 sudo apt-get install python3-distutils
