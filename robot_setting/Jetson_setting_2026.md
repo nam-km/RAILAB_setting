@@ -12,7 +12,7 @@ How to set up a new robot PC (Ubuntu 24.04) from an empty board, matching the 20
 | Root disk | NVMe SSD |
 | User / hostname | `raiway` / `raiway` |
 
-Files used by this manual are in `robot_pc/files/` of this repo.
+Files used by this manual are in `robot_setting/files/` of this repo.
 
 ----
 ## Step 0: Host PC
@@ -242,10 +242,10 @@ git clone -b ral_submission git@github.com:KyeongminNam/raiway_controller.git
 cd ~/raisin_network_ws/src/raisin
 ./install_dependencies.sh
 ```
-- Copy 2 local files from this repo's `robot_pc/files/` to `~/raisin_network_ws/` (they aren't in git):
+- Copy 2 local files from this repo's `robot_setting/files/` to `~/raisin_network_ws/` (they aren't in git):
   - `RAISIN_IGNORE`: the packages to skip when building (simulation-only and unused plugins).
   - `modify_cmakelists.sh`: adds the Boost path to `CMakeLists.txt`, which the aarch64 build needs.
-- Copy the robot config from `robot_pc/files/raisin/` to `~/.raisin/`:
+- Copy the robot config from `robot_setting/files/raisin/` to `~/.raisin/`:
   - `homing.conf`: the robot's joint homing (zero position) values. **Only valid for this robot.** Redo homing if the robot is different.
   - `raisin_gui/params.yaml`: the GUI talks to the robot over `wlan0`.
 - First build:
