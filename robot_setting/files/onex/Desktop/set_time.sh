@@ -31,4 +31,13 @@ ssh $SSH_OPTS "$HOST" "
   echo -n 'remote now: '
   date '+%Y-%m-%d %H:%M:%S %Z'
 "
-finish $?
+RC=$?
+
+# 3) delete old raisin logs. cd first, so rm never runs in the wrong dir.
+ssh $SSH_OPTS "$HOST" "
+  SUDO=''; [ \"\$(id -u)\" -ne 0 ] && SUDO='sudo'
+  cd /home/raiway/raisin_network_ws/log/raisin_raiway/ || exit 1
+  \$SUDO rm -rf raisin_19*
+  echo 'removed raisin_19* logs'
+" || RC=$?
+finish $RC

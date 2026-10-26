@@ -112,7 +112,7 @@ alias node="cd ~/raisin_network_ws && ./build/src/raisin/raisin_raiway/raisin_ra
 ## 8. Dock launchers
 | Launcher | Does |
 |---|---|
-| Set Time | copies the OneX clock to the robot |
+| Set Time | copies the OneX clock to the robot, then deletes old `raisin_19*` logs in `/home/raiway/raisin_network_ws/log/raisin_raiway/` |
 | Server On | starts the robot node |
 | Server Off | stops the robot node |
 | raisin network GUI | opens the GUI |
