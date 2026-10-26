@@ -25,7 +25,7 @@ exit
 # exit user and log in as nkm
 ssh-keygen
 cat .ssh/id_rsa.pub
-git clone git@github.com:KyeongminNam/RAILAB_setting.git
+git clone git@github.com:nam-km/RAILAB_setting.git
 ```
 
 - modify Dockerfile, runner.bash  
@@ -122,7 +122,7 @@ python setup.py develop --CMAKE_PREFIX_PATH /raisim_ws/raisim2Lib/raisim
 
 - add raisim activation key
 ```
-git clone git@github.com:KyeongminNam/RAILAB_setting.git
+git clone git@github.com:nam-km/RAILAB_setting.git
 mkdir /root/.raisim
 cp RAILAB_setting/activation.raisim /root/.raisim/
 ```
@@ -130,7 +130,7 @@ cp RAILAB_setting/activation.raisim /root/.raisim/
 
 - Some useful commands
 ```
-git clone git@github.com:KyeongminNam/raisimGymForSegway.git
+git clone git@github.com:nam-km/raisimGymForSegway.git
 python setup.py develop --CMAKE_PREFIX_PATH ../raisimLib/raisim/linux
 python setup.py develop --CMAKE_PREFIX_PATH ../raisim2Lib/raisim/linux
 git checkout -- .

@@ -233,9 +233,9 @@ raisin is the robot control software. `raisin_master` is the workspace, and the 
 mkdir ~/raisin_network_ws && cd ~/raisin_network_ws
 git clone git@github.com:railabatkaist/raisin_master.git .
 cd src
-git clone -b raiway_network git@github.com:KyeongminNam/raisinForRaiway.git raisin
-git clone -b raiway_network git@github.com:KyeongminNam/raisin_plugin.git
-git clone -b ral_submission git@github.com:KyeongminNam/raiway_controller.git
+git clone -b raiway_network git@github.com:nam-km/raisinForRaiway.git raisin
+git clone -b raiway_network git@github.com:nam-km/raisin_plugin.git
+git clone -b ral_submission git@github.com:nam-km/raiway_controller.git
 ```
 - Install raisin's dependencies (it supports 24.04 and asks y/n once):
 ```
