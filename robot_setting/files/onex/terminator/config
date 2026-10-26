@@ -1,0 +1,17 @@
+[global_config]
+  title_font = Ubuntu 31
+[keybindings]
+[profiles]
+  [[default]]
+    cursor_color = "#aaaaaa"
+    scroll_on_keystroke = False
+    scrollback_infinite = True
+[layouts]
+  [[default]]
+    [[[window0]]]
+      type = Window
+      parent = ""
+    [[[child1]]]
+      type = Terminal
+      parent = window0
+[plugins]

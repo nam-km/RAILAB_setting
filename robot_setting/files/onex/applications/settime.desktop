@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Set Time
+Comment=Set jetson time as onex time
+Exec=/home/raiway/Desktop/set_time.sh
+Icon=/home/raiway/.local/share/icons/raiway/clock.png
+Terminal=true
+Type=Application
+Categories=Utility;

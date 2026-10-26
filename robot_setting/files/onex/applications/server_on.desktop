@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Server On
+Comment=Launch Raiway Server
+Exec=/home/raiway/raisin_network_ws/install/scripts/raisin_raiway/scripts/remote_raisin_up.sh -u raiway -f /home/raiway/raisin_network_ws
+Icon=/home/raiway/.local/share/icons/raiway/server-01.png
+Terminal=true
+Type=Application
+Categories=Utility;

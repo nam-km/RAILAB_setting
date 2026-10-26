@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Server Off
+Comment=Kill Raiway Server
+Exec=/home/raiway/raisin_network_ws/install/scripts/raisin_raiway/scripts/remote_raisin_down.sh -u raiway -f /home/raiway/raisin_network_ws
+Icon=/home/raiway/.local/share/icons/raiway/server-02.png
+Terminal=true
+Type=Application
+Categories=Utility;
