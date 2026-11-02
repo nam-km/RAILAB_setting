@@ -11,6 +11,9 @@ raisim2, raisin, RL training (CUDA / PyTorch), CLion.
 | [Linux_setting_24.md](linux_setting/Linux_setting_24.md) | 24.04 | Driver 595, CUDA 13.2, PyTorch 2.15 |
 | [Linux_setting_22.md](linux_setting/Linux_setting_22.md) | 22.04 | Driver 580, CUDA 13.0, PyTorch 2.14. Also the Jetson flashing host |
 | [Linux_setting_20.md](linux_setting/Linux_setting_20.md) | 20.04 | Old notes |
+| [desktop_setting.md](linux_setting/desktop_setting.md) | 20.04–24.04 | Steps common to all versions, apps, launchers, GNOME settings. Use with a version manual |
+
+Launcher icons used by `desktop_setting.md` are in `linux_setting/files/icons/`.
 
 ## Robot PC and operator PC (`robot_setting/`)
 
