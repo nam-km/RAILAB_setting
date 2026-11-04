@@ -1,5 +1,5 @@
 # Desktop Setting (Ubuntu 20.04 / 22.04 / 24.04)
-Last Updated : 2026.11.02
+Last Updated : 2026.11.05
 
 Covers two things:
 - Setup that is the same on Ubuntu 20.04, 22.04 and 24.04.
@@ -9,7 +9,7 @@ Driver, CUDA, PyTorch, raisin, raisim, CLion and Jetson flashing steps differ by
 
 Order:
 1. Sections 0–4 here.
-2. Your version manual, steps 3–9 (driver, CUDA, conda env + PyTorch, raisin, raisim, CLion, Jetson). Skip the Miniconda install at the start of step 5, because section 4 here already did it. `Linux_setting_20.md` has no step numbers, so use its CUDA and conda notes.
+2. Your version manual, steps 3–9 (driver, CUDA, conda env + PyTorch, raisin, raisim, CLion, Jetson). `Linux_setting_24.md` and `Linux_setting_22.md` have only these steps. `Linux_setting_20.md` has no step numbers, so use its CUDA and conda notes.
 3. Sections 5–9 here. The launchers in section 7 need raisim and raisin built.
 
 The settings were read from this PC. apt package names were checked on packages.ubuntu.com for 22.04 and 24.04. Where a name differs, the note says so.
@@ -85,6 +85,7 @@ sudo apt install -y fzf gitk sshpass minicom rlwrap zstd speedtest-cli pandoc do
 ```
 - `ttf-mscorefonts-installer` shows a license screen. Press Tab to select OK, then Enter.
 - On 24.04, `pip install` into the system Python is refused (`externally-managed-environment`). Use a conda env (section 4). Don't use `--break-system-packages`.
+- 24.04 has no gedit (the default editor is `gnome-text-editor`). The `gb` alias in section 9 needs it: `sudo apt install -y gedit`.
 
 ### VS Code, Chrome, mcfly
 - VS Code: https://code.visualstudio.com/download → `sudo apt install ./code_*_amd64.deb`
@@ -113,9 +114,12 @@ ssh-keygen -t ed25519 && cat ~/.ssh/id_ed25519.pub
 - GitHub CLI (`gh`): https://github.com/cli/cli/releases → `gh_*_linux_amd64.tar.gz`
 ```
 tar -xzf gh_*_linux_amd64.tar.gz && mkdir -p ~/.local/bin && cp gh_*_linux_amd64/bin/gh ~/.local/bin/
-gh auth login        # GitHub.com → HTTPS → yes to "Authenticate Git" → log in with a web browser
+gh auth login        # GitHub.com → SSH → pick ~/.ssh/id_ed25519.pub → log in with a web browser
 ```
-- `gh auth login` adds `gh` as the git credential helper in `~/.gitconfig`, so HTTPS `git push` also works.
+- With SSH, `gh auth login` uploads the key from the line above to GitHub, so you don't add it by hand.
+- "Log in with a web browser": the terminal prints a one-time code (`First copy your one-time code: XXXX-XXXX`). Enter it on the https://github.com/login/device page that opens, then **Authorize GitHub CLI**. Chrome's `zygote ... Broken pipe` lines in the terminal are harmless.
+- Check: `ssh -T git@github.com` prints `Hi <user>! You've successfully authenticated`.
+- If it prints `Permission denied (publickey)` although `gh ssh-key list` shows this PC's key, check https://www.githubstatus.com: a Git Operations incident gives the same error, on and off. Wait for it to end.
 
 ### Node.js (nvm)
 Needed for the `omc` CLI and `npx`.
@@ -227,7 +231,10 @@ wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 bash Miniconda3-latest-Linux-x86_64.sh        # answer yes to conda init
 source ~/.bashrc
 conda config --set auto_activate_base false
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 ```
+- The two `conda tos accept` lines accept the Anaconda Terms of Service. Without them, `conda create` stops with `CondaToSNonInteractiveError`.
 - Create the `raisim` env and install PyTorch and the training packages with your version manual (step 5). The Python version, CUDA wheel and package pins differ per Ubuntu version.
 - Every raisimGym env needs `ruamel.yaml<0.18`: raisimGym imports `ruamel.yaml.dump`, which 0.18 removed.
 - wandb: make an account at https://wandb.ai/site, then `wandb login` and paste the key from https://wandb.ai/authorize.
@@ -258,24 +265,48 @@ Others:
 | Synology Chat | Synology Download Center → Synology Chat Client (`.deb`) → `sudo apt install ./*.deb` | |
 | AnyDesk | https://anydesk.com/en/downloads/linux → `.deb` | Runs as a service, starts at boot |
 | RustDesk | https://github.com/rustdesk/rustdesk/releases → `rustdesk-*-x86_64.deb` | Runs as a service, starts at boot |
-| Bambu Studio | https://github.com/bambulab/BambuStudio/releases → AppImage for your Ubuntu version | 3D printer slicer. Commands below |
+| Bambu Studio | Flathub (`com.bambulab.BambuStudio`) | 3D printer slicer. Commands below |
 | MATLAB R2020a | MathWorks installer → `/usr/local/MATLAB/R2020a` | |
 | CARLA 0.9.16 | https://github.com/carla-simulator/carla/releases → `CARLA_0.9.16.tar.gz` | Commands below |
 
-Bambu Studio (AppImages need FUSE 2):
+Bambu Studio (Flatpak):
 ```
-sudo apt install -y libfuse2          # 24.04: libfuse2t64
-sudo install -m 755 Bambu_Studio_*.AppImage /opt/Bambu_Studio.AppImage
+sudo apt install -y flatpak
+flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+flatpak install -y flathub com.bambulab.BambuStudio
 ```
+- After adding Flathub for the first time, log out and back in so the app shows in the app grid.
+- The Flatpak installs its own launcher (`com.bambulab.BambuStudio.desktop`), so section 7 doesn't make one.
+- Run: `flatpak run com.bambulab.BambuStudio`. Update: `flatpak update`.
 CARLA:
 ```
 mkdir ~/CARLA_0.9.16 && tar -xzf CARLA_0.9.16.tar.gz -C ~/CARLA_0.9.16
 cd ~/CARLA_0.9.16 && ./CarlaUE4.sh
 ```
-Open `.md` files with MD Viewer:
+Open `.md` files with MD Viewer. The md-viewer snap (0.3.0) ships no `.desktop` file, so make one:
 ```
-xdg-mime default md-viewer_md-viewer.desktop text/markdown
+cat > ~/.local/share/applications/md-viewer.desktop <<'EOF'
+[Desktop Entry]
+Type=Application
+Name=MD Viewer
+Exec=/snap/bin/md-viewer %f
+Icon=text-markdown
+MimeType=text/markdown;text/x-markdown;
+Categories=Utility;
+EOF
+update-desktop-database ~/.local/share/applications
+xdg-mime default md-viewer.desktop text/markdown
 ```
+- Check: `xdg-mime query default text/markdown` prints `md-viewer.desktop`.
+
+raisimUnreal (needed by the `unreal` alias and the launcher in section 7). Get `Linux.zip` (raisimUnreal2 Linux build, about 3 GB) and put it in `~/Downloads`:
+```
+cd ~/Downloads && unzip -q Linux.zip
+chmod +x Linux/raisimUnreal2.sh Linux/raisimUnreal2/Binaries/Linux/raisimUnreal2-Linux-Shipping \
+  Linux/Engine/Binaries/Linux/CrashReportClient
+```
+- The zip doesn't keep the execute bits, so the `chmod` is needed. Without it, the launcher does nothing.
+- Check: `./Linux/raisimUnreal2.sh` opens the viewer (about 1.7 GB of GPU memory).
 
 ----
 ## 6. ROS 2 and RealSense
@@ -311,7 +342,6 @@ sudo apt install -y librealsense2-dkms librealsense2-utils librealsense2-dev
 | raisimUnreal | `~/Downloads/Linux/raisimUnreal2.sh` |
 | raisin gui | raisin GUI in `~/raisin_network_ws/build` |
 | RaiSim2 TCP Viewer | `rayrai_tcp_viewer` after `source raisim_env.sh` (same as the `ru2` alias) |
-| Bambu Studio | `/opt/Bambu_Studio.AppImage` |
 | MATLAB | `/usr/local/MATLAB/R2020a/bin/matlab -desktop` |
 
 Run from `linux_setting/` in this repo (the icons are in `files/icons/`):
@@ -369,16 +399,6 @@ Icon=$I/rayrai-tcp-viewer.png
 Categories=Science;Engineering;
 EOF
 
-cat > $A/bambu_studio.desktop <<EOF
-[Desktop Entry]
-Type=Application
-Name=Bambu Studio
-Exec=/opt/Bambu_Studio.AppImage
-Icon=$I/bambu-studio.png
-Categories=Graphics;
-StartupWMClass=BambuStudio
-EOF
-
 cat > $A/matlab.desktop <<EOF
 [Desktop Entry]
 Type=Application
@@ -393,9 +413,9 @@ EOF
 
 Dock, in this PC's order:
 ```
-gsettings set org.gnome.shell favorite-apps "['google-chrome.desktop', 'gnome-control-center.desktop', 'org.gnome.Nautilus.desktop', 'terminator.desktop', 'code.desktop', 'jetbrains-clion.desktop', 'teams-for-linux_teams-for-linux.desktop', 'bambu_studio.desktop', 'notion-desktop_notion-desktop.desktop', 'rayrai-tcp-viewer.desktop', 'raisimUnity.desktop', 'raisimUnreal.desktop']"
+gsettings set org.gnome.shell favorite-apps "['google-chrome.desktop', 'gnome-control-center.desktop', 'org.gnome.Nautilus.desktop', 'terminator.desktop', 'code.desktop', 'jetbrains-clion.desktop', 'teams-for-linux_teams-for-linux.desktop', 'com.bambulab.BambuStudio.desktop', 'notion-desktop_notion-desktop.desktop', 'rayrai-tcp-viewer.desktop', 'raisimUnity.desktop', 'raisimUnreal.desktop']"
 ```
-- On 24.04, Settings is `org.gnome.Settings.desktop`. CLion from snap is `clion_clion.desktop`. `jetbrains-clion.desktop` comes from a tar.gz CLion (CLion → Tools → Create Desktop Entry), as on this PC.
+- On 24.04, Settings is `org.gnome.Settings.desktop`, and the current VS Code `.deb` installs `com.microsoft.VSCode.desktop` instead of `code.desktop` (check with `ls /usr/share/applications | grep -i code`). CLion from snap is `clion_clion.desktop`. `jetbrains-clion.desktop` comes from a tar.gz CLion (CLion → Tools → Create Desktop Entry), as on this PC.
 - Check: press Super, type `raisim`, and the launchers show with their icons.
 
 ----
@@ -414,7 +434,7 @@ Host raibo2
 
 ----
 ## 9. ~/.bashrc
-conda, nvm and ROS 2 add their own lines. Keep those, then add the block below. Its first two lines are the CUDA lines from the version manual's step 4, so don't add them twice.
+conda, nvm, Codex and ROS 2 add their own lines. Keep those, then add the block below. Its first two lines are the CUDA lines from the version manual's step 4, so don't add them twice.
 ```
 export PATH=/usr/local/cuda/bin:$PATH
 export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
@@ -422,7 +442,13 @@ export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
 export PATH=$HOME/.local/bin:$PATH
 export LANG=en_US.UTF-8
 export raisim_DIR=$HOME/raisim_ws/raisimLib/raisim/linux
-eval "$(mcfly init bash)"
+# mcfly: vim keys, fuzzy search, 30 results
+if command -v mcfly >/dev/null 2>&1; then
+  export MCFLY_KEY_SCHEME=vim
+  export MCFLY_FUZZY=2
+  export MCFLY_RESULTS=30
+  eval "$(mcfly init bash)"
+fi
 
 alias gb="gedit ~/.bashrc"
 alias sb="source ~/.bashrc"
@@ -434,8 +460,8 @@ alias ru2="cd ~/raisim_ws/raisim2Lib && source ./raisim_env.sh && ./build-exampl
 alias unreal="cd ~/Downloads/Linux/ && bash raisimUnreal2.sh"
 
 # raisin
-alias build="cd ~/raisin_network_ws/build && cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release && ninja -j $(nproc)"
-alias cleanbuild="cd ~/raisin_network_ws && rm -rf generated/ build/ install/ CMakeLists.txt && python3 raisin_workspace_setup.py && mkdir build && cd build && cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release && ninja -j $(nproc)"
+alias build="cd ~/raisin_network_ws/build && cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DSPHINX_EXECUTABLE=$HOME/.venvs/raisin-docs/bin/sphinx-build && ninja -j $(nproc)"
+alias cleanbuild="cd ~/raisin_network_ws && rm -rf generated/ build/ install/ CMakeLists.txt && python3 raisin_workspace_setup.py && mkdir build && cd build && cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DSPHINX_EXECUTABLE=$HOME/.venvs/raisin-docs/bin/sphinx-build && ninja -j $(nproc)"
 alias gui="cd ~/raisin_network_ws && ./build/src/raisin/raisin_gui/raisin_gui/raisin_gui"
 alias node2="cd ~/raisin_network_ws && ./build/src/raisin/raisin_raiway/raisin_raiway_node"
 alias raibo2node="cd ~/raisin_network_ws && ./build/src/raisin/raisin_raibo2/raisin_raibo2_node"
@@ -462,6 +488,8 @@ alias ssh168='ssh -L 4168:localhost:4168 nkm@143.248.6.168'
 alias cp168='cd ~ && scp -r nkm@143.248.6.168:data/ .'
 ```
 - Keep API keys out of this block: it gets copied between PCs and into this repo.
+- New terminals load it. In terminals that were already open, run `source ~/.bashrc` once (`sb` only exists after that).
+- `build` / `cleanbuild` pass `-DSPHINX_EXECUTABLE` for the raisin docs build (`Linux_setting_24.md` step 6). On 20.04 / 22.04 without that venv, drop the option.
 
 ----
 ## Useful commands

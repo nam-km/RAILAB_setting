@@ -1,8 +1,10 @@
 # Linux Setting Manual (Ubuntu 24.04)
-Last Updated : 2026.11.02
+Last Updated : 2026.11.05
 
 Set up a desktop PC on **Ubuntu 24.04** for raisim2, raisin, and RL training.
 This PC can't flash the Jetson: the CTI flash tools need a 20.04/22.04 host (see `robot_setting/Jetson_setting_2026.md`, Step 0). Use a 22.04 PC (`Linux_setting_22.md`) for that.
+
+This manual has only the 24.04-specific steps (3–9). The steps that are the same on every Ubuntu version are in `desktop_setting.md`: backup, Korean input, basic tools, GitHub, Claude Code, Terminator, Miniconda, apps, launchers, `~/.bashrc`. Follow the order at the top of `desktop_setting.md`.
 
 | Item | Version |
 |---|---|
@@ -20,48 +22,8 @@ This PC can't flash the Jetson: the CTI flash tools need a 20.04/22.04 host (see
 - If you need PyTorch 2.14 (cu130) for an older project: `pip install torch==2.14.1 --index-url https://download.pytorch.org/whl/cu130` works with the same driver.
 
 ----
-## 0. Before reinstalling
-If you are reinstalling an existing PC, copy these to an external disk first:
-- `~/.ssh/`, `~/.bashrc`, `~/.raisim/`
-- Uncommitted or unpushed work: run `git status` in each repo under `~/raisim_ws` and `~/raisin_network_ws/src`
-- Training logs and data
-
-----
-## 1. Ubuntu
-- Install Ubuntu 24.04 Desktop.
-- Korean input:
-  1. Settings → System → Region & Language → Manage Installed Languages → Install / Remove Languages → check **Korean**.
-  2. `sudo apt install -y ibus-hangul`, then log out and back in.
-  3. Settings → Keyboard → Input Sources → **+** → Korean → **Korean (Hangul)**. Switch with Shift+Space (change it in the Hangul preferences).
-
-----
-## 2. Basic tools
-```
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y git cmake build-essential ninja-build curl wget vim terminator tmux \
-  openssh-server python3-pip python-is-python3 htop gpustat net-tools jq ffmpeg imagemagick
-```
-- VS Code: https://code.visualstudio.com/download → `sudo apt install ./code_*_amd64.deb`
-- Chrome: https://www.google.com/chrome/ → `sudo apt install ./google-chrome-stable_current_amd64.deb`
-- mcfly (better Ctrl+R): https://github.com/cantino/mcfly/releases → `mcfly-*-x86_64-unknown-linux-musl.tar.gz`
-```
-tar -xzf mcfly-*.tar.gz && sudo mv mcfly /usr/local/bin/
-```
-- Claude Code:
-```
-curl -fsSL https://claude.ai/install.sh | bash
-```
-- Codex:
-```
-curl -fsSL https://chatgpt.com/codex/install.sh | sh
-```
-- GitHub SSH key (add the `.pub` to GitHub):
-```
-git config --global user.email twinhk@kaist.ac.kr
-git config --global user.name KyungminNam
-ssh-keygen -t ed25519 && cat ~/.ssh/id_ed25519.pub
-```
-- On 24.04, `pip install` into the system Python is refused (`externally-managed-environment`). Use the conda env from step 5 for Python packages; don't use `--break-system-packages`.
+## 0–2. Backup, Ubuntu, basic tools
+In `desktop_setting.md`, sections 0–4.
 
 ----
 ## 3. NVIDIA driver
@@ -89,57 +51,111 @@ sudo apt install -y cuda-toolkit-13-2 cudnn9-cuda-13
 ```
 - The pin file keeps the driver from step 3. NVIDIA's repo ships its own driver packages, and without the pin `apt upgrade` can switch to them. The toolkit and cuDNN don't depend on any driver package.
 - Install `cuda-toolkit-13-2`, not `cuda` or `cuda-13-2`: those also install NVIDIA's driver and replace the one from step 3.
-- Add to `~/.bashrc`:
-```
-export PATH=/usr/local/cuda/bin:$PATH
-export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
-```
-- Check: `nvcc --version` (13.2) and `dpkg -l | grep cudnn9` (9.x).
+- The CUDA `PATH` and `LD_LIBRARY_PATH` lines are the first two lines of the `~/.bashrc` block in `desktop_setting.md` section 9.
+- Check (in a new terminal, after adding the `~/.bashrc` lines): `nvcc --version` (13.2) and `dpkg -l | grep cudnn9` (9.x).
 
 ----
-## 5. Python (miniconda) + PyTorch
+## 5. conda env + PyTorch
+Miniconda itself is in `desktop_setting.md` section 4.
 ```
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-bash Miniconda3-latest-Linux-x86_64.sh        # answer yes to conda init
-source ~/.bashrc
-conda config --set auto_activate_base false
-
-conda create -n raisim python=3.12            # accept the Anaconda Terms of Service if asked
+conda create -n raisim python=3.12
 conda activate raisim
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cu132
 pip install numpy scipy matplotlib tensorboard wandb onnx onnxruntime "ruamel.yaml<0.18"
 ```
 - Python 3.12 matches the system Python of 24.04 (PyTorch 2.15 supports 3.11 to 3.15).
-- `ruamel.yaml<0.18`: raisimGym imports `ruamel.yaml.dump`, which 0.18 removed.
+- `ruamel.yaml<0.18`: see `desktop_setting.md` section 4.
+- The torch download is about 3–4 GB (torch plus the `nvidia-*` CUDA libraries).
 - PyTorch wheels bundle their own CUDA runtime and cuDNN, so torch works even before step 4. Step 4 is for compiling CUDA code.
 - Check:
 ```
 python -c "import torch; print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0))"
 ```
-- wandb: make an account at https://wandb.ai/site, then `wandb login` and paste the key from https://wandb.ai/authorize.
+- wandb login: `desktop_setting.md` section 4.
 
 ----
 ## 6. raisin
-Your GitHub account needs access to `railabatkaist/raisin_master` and `nam-km/raisin` (private). `install_dependencies.sh` asks y/n once.
-Run it with no conda env active (`conda deactivate`). On 24.04 it installs the Python packages with apt (`python3-osmnx`, `python3-numpy`, ...), not pip.
+Your GitHub account needs access to `railabatkaist/raisin_master`, `nam-km/raisin`, `nam-km/raisin_plugin` and `nam-km/raiway_controller` (private).
+
+| Repo | Branch | Path |
+|---|---|---|
+| `railabatkaist/raisin_master` | default | `~/raisin_network_ws` |
+| `nam-km/raisin` | `raiway_network` | `src/raisin` |
+| `nam-km/raisin_plugin` | `raiway_network` | `src/raisin_plugin` |
+| `nam-km/raiway_controller` | `master` | `src/raiway_controller` |
+
+Dependencies:
 ```
 sudo apt install -y libminizip-dev libavdevice-dev \
   python3-numpy python3-scipy python3-pandas python3-sklearn python3-networkx \
   python3-geopandas python3-fiona python3-pyproj python3-shapely \
-  python3-sphinx python3-breathe python3-sphinx-rtd-theme
+  python3-sphinx python3-breathe python3-sphinx-rtd-theme \
+  python3-venv texlive-font-utils
 
 mkdir ~/raisin_network_ws && cd ~/raisin_network_ws
 git clone git@github.com:railabatkaist/raisin_master.git .
 git clone -b raiway_network git@github.com:nam-km/raisin.git src/raisin
+git clone -b raiway_network git@github.com:nam-km/raisin_plugin.git src/raisin_plugin
+git clone -b master git@github.com:nam-km/raiway_controller.git src/raiway_controller
+
+conda deactivate
 ./src/raisin/install_dependencies.sh
-echo raisin_rf > RAISIN_IGNORE
-python3 raisin_workspace_setup.py
-mkdir build && cd build
-cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release && ninja -j $(nproc)
 ```
+- `src/raisin/install_dependencies.sh` asks y/n once. Check that it prints `/usr/bin/python3`, not a conda Python. On 24.04 it installs the Python packages with apt (`python3-osmnx`, `python3-numpy`, ...), not pip.
+- Don't run the `install_dependencies.sh` at the workspace root. It installs pre-commit with `sudo pip install --break-system-packages`, and fails unless `raisin.py` has run first.
+- `texlive-font-utils` gives `epstopdf`. Without it the docs build prints `epstopdf: not found`, which is harmless.
+
+Sphinx extensions for the docs build. The docs need `sphinx_tabs`, `sphinx_panels` and `sphinxcontrib.youtube`. `sphinxcontrib-youtube` isn't in the 24.04 apt repo, so install the three in a venv that also sees the apt Sphinx:
+```
+python3 -m venv --system-site-packages ~/.venvs/raisin-docs
+~/.venvs/raisin-docs/bin/pip install sphinx-tabs sphinx-panels sphinxcontrib-youtube
+cat > ~/.venvs/raisin-docs/bin/sphinx-build <<'EOF'
+#!/bin/sh
+# System Sphinx + extensions pip-installed in this venv
+exec "$(dirname "$0")/python" -m sphinx "$@"
+EOF
+chmod +x ~/.venvs/raisin-docs/bin/sphinx-build
+```
+- The venv has no `sphinx-build` of its own, because Sphinx comes from apt. The wrapper runs Sphinx with the venv's Python.
+- Pass it to cmake with `-DSPHINX_EXECUTABLE` (below and in the `build` / `cleanbuild` aliases in `desktop_setting.md` section 9). Without it, cmake picks `/usr/bin/sphinx-build` and the build stops at `Could not import extension sphinx_tabs.tabs`.
+
+Fixes needed with these commits (`raisin_master` `66edc92`, `nam-km/raisin` `d820ecb7`):
+```
+cd ~/raisin_network_ws
+ln -s raisin.py raisin_workspace_setup.py
+```
+- `raisin_master` renamed `raisin_workspace_setup.py` to `raisin.py`, but `raisin_util` in `nam-km/raisin` still looks for `raisin_workspace_setup.py` to find the workspace. Without the link, `raisin_gui` and the nodes print `[Raisin Util] install directory is ` (empty), then `Could not find file: params.yaml` and abort. The link also keeps the `cleanbuild` alias working. `railabatkaist/raisin` already looks for `raisin.py`.
+- `raisin_tf/src/time.cpp`: the body of `tf2::displayTimePoint()` is commented out, so it has no `return` and `-Werror=return-type` stops the build. Add this line before its closing `}`:
+```
+  return std::to_string(tf2::timeToSec(stamp));
+```
+
+Build:
+```
+cd ~/raisin_network_ws
+echo raisin_rf > RAISIN_IGNORE
+python3 raisin.py setup
+mkdir build && cd build
+cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DSPHINX_EXECUTABLE=$HOME/.venvs/raisin-docs/bin/sphinx-build
+```
+- If cmake stops at `Failed to open .../libtorch-cxx11-abi-shared-with-deps-1.10.2+cpu.zip`: `raisin_torch` downloads libtorch with `wget -E`, which saves it as `.zip.html`. Rename it and run cmake again. It's only needed the first time, because it is extracted into `src/raisin/raisin_torch/pytorch/`.
+```
+mv libtorch-cxx11-abi-shared-with-deps-1.10.2+cpu.zip.html libtorch-cxx11-abi-shared-with-deps-1.10.2+cpu.zip
+cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DSPHINX_EXECUTABLE=$HOME/.venvs/raisin-docs/bin/sphinx-build
+```
+```
+ninja -j $(nproc)
+```
+- Check: the `tester` alias (`desktop_setting.md` section 9) opens the raisin GUI and the raiway node. The GUI log shows `Detected peer: railab_raiway-...`.
 
 ----
 ## 7. raisim
+Build dependencies (raisim and raisim2 both need Eigen3, and rayrai needs SDL2):
+```
+sudo apt install -y libeigen3-dev libsdl2-dev
+```
+- Step 6 (`install_dependencies.sh`) may already install these, but without them cmake stops with `Could not find a package configuration file provided by "Eigen3"` if you do this step first.
+
 Activation key (same key as `activation.raisim` in this repo):
 ```
 mkdir -p ~/.raisim && cp activation.raisim ~/.raisim/
@@ -179,52 +195,4 @@ Flash from a 22.04 PC: `Linux_setting_22.md` step 9 and `robot_setting/Jetson_se
 
 ----
 ## 10. ~/.bashrc
-```
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
-export raisim_DIR=$HOME/raisim_ws/raisimLib/raisim/linux
-eval "$(mcfly init bash)"
-
-alias gb="gedit ~/.bashrc"
-alias sb="source ~/.bashrc"
-alias car="conda activate raisim"
-
-# raisim
-alias ru="cd ~/raisim_ws/raisimLib/raisimUnity/linux && ./raisimUnity.x86_64"
-alias ru2="cd ~/raisim_ws/raisim2Lib && source ./raisim_env.sh && ./build-examples/examples/rayrai_tcp_viewer"
-alias unreal="cd ~/Downloads/Linux/ && bash raisimUnreal2.sh"
-
-# raisin
-alias build="cd ~/raisin_network_ws/build && cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release && ninja -j $(nproc)"
-alias cleanbuild="cd ~/raisin_network_ws && rm -rf generated/ build/ install/ CMakeLists.txt && python3 raisin_workspace_setup.py && mkdir build && cd build && cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release && ninja -j $(nproc)"
-alias gui="cd ~/raisin_network_ws && ./build/src/raisin/raisin_gui/raisin_gui/raisin_gui"
-alias node2="cd ~/raisin_network_ws && ./build/src/raisin/raisin_raiway/raisin_raiway_node"
-alias raibo2node="cd ~/raisin_network_ws && ./build/src/raisin/raisin_raibo2/raisin_raibo2_node"
-alias tester="gui & node2"
-
-# raisin_ws (ROS 2): needs ROS 2, which this manual doesn't install
-alias cwbs="cd ~/raisin_ws/ && colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release && source install/setup.bash"
-alias cws="cd ~/raisin_ws/ && source install/setup.bash"
-
-alias matlab='/usr/local/MATLAB/R2020a/bin/matlab -desktop'
-
-# lab servers: ssh with port forwarding, cp* copies the server's ~/data to ~/
-alias ssh101='ssh -L 4101:localhost:4101 nkm@143.248.6.101'
-alias ssh1012='ssh -L 5101:localhost:5101 nkm@143.248.6.101'
-alias cp101='cd ~ && scp -r nkm@143.248.6.101:data/ .'
-alias ssh105='ssh -L 4444:localhost:4444 nkm@143.248.6.105'
-alias ssh1052='ssh -L 5444:localhost:5444 nkm@143.248.6.105'
-alias cp105='cd ~ && scp -r nkm@143.248.6.105:data/ .'
-alias ssh83='ssh -L 4083:localhost:4083 nkm@143.248.6.83'
-alias cp83='cd ~ && scp -r nkm@143.248.6.83:data/ .'
-alias ssh189='ssh -L 4189:localhost:4189 nkm@143.248.247.189'
-alias cp189='cd ~ && scp -r nkm@143.248.247.189:data/ .'
-alias ssh168='ssh -L 4168:localhost:4168 nkm@143.248.6.168'
-alias cp168='cd ~ && scp -r nkm@143.248.6.168:data/ .'
-```
-
-----
-## Useful commands
-Free the page cache (memory check):
-```
-sync && echo 3 | sudo tee /proc/sys/vm/drop_caches
-```
+In `desktop_setting.md` section 9 (CUDA lines, aliases for raisim, raisin and the lab servers).
