@@ -19,10 +19,12 @@ Launcher icons used by `desktop_setting.md` are in `linux_setting/files/icons/`.
 
 | Manual | Device | Note |
 |---|---|---|
-| [Jetson_setting_2026.md](robot_setting/Jetson_setting_2026.md) | Jetson AGX Orin + CTI Rogue | Ubuntu 24.04, JetPack 7.2. Flash from a 22.04 host |
-| [Onex_setting_2026.md](robot_setting/Onex_setting_2026.md) | ONEXPLAYER 2 (operator PC) | Ubuntu 24.04, dock launchers |
-| [Jetson_setting_2025.md](robot_setting/Jetson_setting_2025.md) | Jetson AGX Orin | 2025 robot PC (old) |
-| [Onex_setting_2025.md](robot_setting/Onex_setting_2025.md) | ONEXPLAYER 2 | 2025 operator PC (old) |
+| [Jetson_setting_ubuntu24.md](robot_setting/Jetson_setting_ubuntu24.md) | Jetson AGX Orin + CTI Rogue | Ubuntu 24.04, JetPack 7.2, raisin_raion_ws. Flash from a 22.04 host |
+| [Onex_setting_ubuntu24.md](robot_setting/Onex_setting_ubuntu24.md) | ONEXPLAYER 2 (operator PC) | Ubuntu 24.04, raisin_raion_ws, raisim2, dock launchers |
+| [Jetson_setting_ubuntu20.md](robot_setting/Jetson_setting_ubuntu20.md) | Jetson AGX Orin | raisin_network_ws step (deprecated) |
+| [Onex_setting_ubuntu20.md](robot_setting/Onex_setting_ubuntu20.md) | ONEXPLAYER 2 | raisin_network_ws sections (deprecated) |
+| [Jetson_setting_ubuntu20_ros.md](robot_setting/Jetson_setting_ubuntu20_ros.md) | Jetson AGX Orin | 2025 robot PC: Ubuntu 20.04, ROS2 foxy (old) |
+| [Onex_setting_ubuntu20_ros.md](robot_setting/Onex_setting_ubuntu20_ros.md) | ONEXPLAYER 2 | 2025 operator PC: ROS2 (old) |
 
 Files used by these manuals (launchers, icons, configs) are in `robot_setting/files/`.
 
@@ -38,7 +40,8 @@ Files used by these manuals (launchers, icons, configs) are in `robot_setting/fi
 
 | File | Note |
 |---|---|
-| [raisin_network.md](raisin_network.md) | raisin_network workspace setup |
+| [raisin_manual.md](raisin_manual.md) | raisin (raisin_master) install from scratch, OTA release packages |
+| [raisin_network.md](raisin_network.md) | raisin_network workspace setup (deprecated, use `raisin_manual.md`) |
 | [HowtoDebug.md](HowtoDebug.md) | Debugging raisimGym envs with CLion and valgrind |
 | `activation.raisim` | raisim activation key. Copy to `~/.raisim/` |
 | `RAL_template.zip` | IEEE RA-L LaTeX template |

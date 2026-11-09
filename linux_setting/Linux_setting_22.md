@@ -2,7 +2,7 @@
 Last Updated : 2026.11.05
 
 Set up a desktop PC on **Ubuntu 22.04** for raisim2, raisin, RL training, and flashing the Jetson.
-The Jetson needs a 22.04 host: NVIDIA's JetPack 7.2 supports 22.04/24.04 hosts and the CTI BSP supports 20.04/22.04 (see `robot_setting/Jetson_setting_2026.md`).
+The Jetson needs a 22.04 host: NVIDIA's JetPack 7.2 supports 22.04/24.04 hosts and the CTI BSP supports 20.04/22.04 (see `robot_setting/Jetson_setting_ubuntu24.md`).
 
 | Item | Version |
 |---|---|
@@ -129,7 +129,7 @@ sudo snap install clion --classic
 ```
 sudo apt install ./sdkmanager_*_amd64.deb
 ```
-- Flashing steps: `robot_setting/Jetson_setting_2026.md`, Step 1.
+- Flashing steps: `robot_setting/Jetson_setting_ubuntu24.md`, Step 1.
 
 ----
 ## 10. ~/.bashrc

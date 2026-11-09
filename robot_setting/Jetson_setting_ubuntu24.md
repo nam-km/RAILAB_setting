@@ -1,7 +1,9 @@
 # Jetson Setting Manual
-Last Updated : 2026.10.26
+Last Updated : 2026.11.09
 
 How to set up a new robot PC (Ubuntu 24.04) from an empty board, matching the 2025 robot PC.
+raisin runs from `raisin_raion_ws` (Raion's raisin_master with OTA release packages).
+The earlier `raisin_network_ws` step is in [Jetson_setting_ubuntu20.md](Jetson_setting_ubuntu20.md) (deprecated). The ROS2 robot PC is in [Jetson_setting_ubuntu20_ros.md](Jetson_setting_ubuntu20_ros.md).
 
 | Item | Version |
 |---|---|
@@ -146,15 +148,30 @@ make -j8 && sudo make install
 
 ----
 ## Step 6: raisim
-Physics engine used by raisin for simulation and robot models.
+Physics engine. raisin in `raisin_raion_ws` uses the raisim that comes with its release packages (`install/lib/libraisim.so`). Install raisim2 and raisim here for tools and projects outside raisin.
 ```
-mkdir ~/raisim_ws && cd ~/raisim_ws
+sudo apt install -y libeigen3-dev libsdl2-dev
+mkdir -p ~/.raisim && cp activation.raisim ~/.raisim/     # license, from the root of this repo
+```
+raisim2:
+```
+mkdir -p ~/raisim_ws && cd ~/raisim_ws
+git clone git@github.com:raisimTech/raisim2Lib.git
+cd raisim2Lib && source ./raisim_env.sh
+cmake -S . -B build-examples -DCMAKE_BUILD_TYPE=Release -DRAISIM_EXAMPLE=ON
+cmake --build build-examples --parallel $(nproc)
+```
+- On aarch64, `raisim_env.sh` picks the `linux-arm` build. Not tried on the Jetson yet.
+- Check: `./build-examples/examples/rayrai_tcp_viewer` (after `source ./raisim_env.sh`).
+
+raisim (v1):
+```
+cd ~/raisim_ws
 git clone git@github.com:raisimTech/raisimLib.git
 cd raisimLib && mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j8
 ```
-- License: copy `activation.raisim` from this repo to `~/.raisim/activation.raisim`.
 - raisimUnreal (the visualizer from raisim's GitHub releases) only runs on x86 PCs, so run it on a desktop instead of the Jetson.
 
 ----
@@ -231,37 +248,49 @@ sudo systemctl enable --now raiway_create_ap.service
 Check: the Wi-Fi `raiway` appears. With `-n`, there's no internet sharing, so use the wired port (`eth0`) for internet.
 
 ----
-## Step 10: raisin (network) workspace
-raisin is the robot control software. `raisin_master` is the workspace, and the robot code goes in `src/`.
+## Step 10: raisin (raion) workspace
+raisin is the robot control software. The workspace is Raion's `raisin_master`. The released packages (raisin, drivers, GUI, ...) are downloaded as binaries from Raion's OTA server, and the raiway code is built from `src/`.
+Your GitHub account needs access to `raionrobotics/raisin_master` and to `railabatkaist/raisin_raiway`, `raiway_plugin` and `raiway_controller` (private). The general install steps are also in `raisin_manual.md` at the root of this repo.
+
+1. Workspace and the `raisin` command:
 ```
-mkdir ~/raisin_network_ws && cd ~/raisin_network_ws
-git clone git@github.com:railabatkaist/raisin_master.git .
-cd src
-git clone -b raiway_network git@github.com:nam-km/raisinForRaiway.git raisin
-git clone -b raiway_network git@github.com:nam-km/raisin_plugin.git
-git clone -b ral_submission git@github.com:nam-km/raiway_controller.git
+git clone git@github.com:raionrobotics/raisin_master.git ~/raisin_raion_ws
+cd ~/raisin_raion_ws
+git submodule update --init      # vcpkg
+sudo bash install_system_deps.sh
+./raisin --install               # adds a raisin function to ~/.bashrc
+source ~/.bashrc
+cp configuration_setting_example.yaml configuration_setting.yaml
 ```
-- Install raisin's dependencies (it supports 24.04 and asks y/n once):
+- In `configuration_setting.yaml`: `user_type: user` (stable release) or `devel` (latest), and `gh_tokens: {}` (the raiway repos are cloned with git below).
+2. OTA access: the OTA server must know this PC's SSH key (`~/.ssh/id_ed25519`). Send the fingerprint to the Raion admin:
 ```
-cd ~/raisin_network_ws/src/raisin
-./install_dependencies.sh
+ssh-keygen -lf ~/.ssh/id_ed25519.pub
 ```
-- Copy 2 local files from this repo's `robot_setting/files/` to `~/raisin_network_ws/` (they aren't in git):
-  - `RAISIN_IGNORE`: the packages to skip when building (simulation-only and unused plugins).
-  - `modify_cmakelists.sh`: adds the Boost path to `CMakeLists.txt`, which the aarch64 build needs.
-- Copy the robot config from `robot_setting/files/raisin/` to `~/.raisin/`:
-  - `homing.conf`: the robot's joint homing (zero position) values. **Only valid for this robot.** Redo homing if the robot is different.
-  - `raisin_gui/params.yaml`: the GUI talks to the robot over `wlan0`.
-- First build:
+3. raiway packages:
 ```
-cd ~/raisin_network_ws
-python3 raisin_workspace_setup.py     # generates message code and CMake files
-./modify_cmakelists.sh
-mkdir build && cd build
-cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_PROCESSOR=aarch64
-ninja -j 8
+cd ~/raisin_raion_ws/src
+git clone git@github.com:railabatkaist/raisin_raiway.git
+git clone git@github.com:railabatkaist/raiway_plugin.git
+git clone git@github.com:railabatkaist/raiway_controller.git
 ```
-- `/etc/systemd/system/raisin_raiway_node.service` starts the robot node at boot as root (EtherCAT needs raw network access) and restarts it 2 s after any crash:
+4. Release packages and the first build:
+```
+cd ~/raisin_raion_ws
+raisin install                       # release packages that the src packages need, from OTA
+sudo bash install_dependencies.sh    # apt packages of every package
+raisin build -t release -i           # builds src/ and installs it to install/
+```
+- Not tried on the Jetson yet: the OTA server must have aarch64 builds of the release packages (the `raisin` CLI supports aarch64).
+- If `raisin install` stops with `401 Unauthorized` or `IncompleteRead`, run it again (see Troubleshooting in `raisin_manual.md`).
+5. Homing: the drives have no multi-turn encoder, so **home the robot after every boot of the robot PC**. Put the robot on the jig, `turn_on`, then `set_home` in the GUI (before `init_motor`). `init_motor` refuses until `set_home` has run in this boot.
+   - The offsets go to `~/.raisin/homing.conf` of the user that runs the node (`/root/.raisin/` for root). `set_home` needs root, because it also writes `/run/.raisin_offset_sentinel`.
+   - Don't copy `robot_setting/files/raisin/homing.conf`: it holds old offsets, and `set_home` writes a new `~/.raisin/homing.conf`. `files/raisin/raisin_gui/params.yaml` (wlan0) is for `raisin_network_ws` only.
+6. Start the node from the OneX with **Server On** (`Onex_setting_ubuntu24.md` section 8). It runs `install/scripts/raisin_raiway/scripts/raisin_up.sh` as root over ssh. Logs: `~/raisin_raion_ws/log/raisin_raiway/`.
+
+**Not working yet** (check before the first real-robot run):
+- **Real MicroStrain IMU.** raisin_raiway builds the real IMU driver only with `-DRAIWAY_WITH_MSCL=ON`, and that needs the MSCL headers, which the raion release doesn't ship (it has only `install/lib/libmscl.so`). Without it, `turn_on` with `real` stops with `Real MicroStrain IMU 'base_imu' needs the MSCL headers`.
+- **systemd service.** `scripts/raisin_service.sh` in raisin_raiway still starts `./build/src/raisin/raisin_raiway/raisin_raiway_node` (the raisin_network_ws layout). It must start `./install/bin/raisin_raiway_node` after `source ld_prefix_path.sh`, like `raisin_up.sh`. Until that is fixed, don't enable the service. Once it is fixed, `/etc/systemd/system/raisin_raiway_node.service` starts the node at boot as root (EtherCAT needs raw network access) and restarts it 2 s after any crash:
 ```
 [Unit]
 Description=raisin raiway node
@@ -269,7 +298,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/home/raiway/raisin_network_ws/install/scripts/raisin_raiway/scripts/raisin_service.sh
+ExecStart=/home/raiway/raisin_raion_ws/install/scripts/raisin_raiway/scripts/raisin_service.sh
 Restart=always
 RestartSec=2
 User=root
@@ -282,23 +311,23 @@ WantedBy=multi-user.target
 sudo systemctl daemon-reload
 sudo systemctl enable --now raisin_raiway_node.service
 ```
+
 - Add to `~/.bashrc`:
 ```
-# rebuild and restart the node
-alias build="cd ~/raisin_network_ws/build && cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_PROCESSOR=aarch64 && ninja -j 8 && sudo systemctl restart raisin_raiway_node.service"
-# regenerate everything and rebuild from scratch
-alias cleanbuild="cd ~/raisin_network_ws && python3 raisin_workspace_setup.py && ./modify_cmakelists.sh && rm -rf build && mkdir build && cd build && cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_PROCESSOR=aarch64 && ninja -j 8 && sudo systemctl restart raisin_raiway_node.service"
-alias gui="cd ~/raisin_network_ws && sudo ./build/src/raisin/raisin_gui/raisin_gui/raisin_gui"
-# run the node by hand (stop the service first): simulation / real robot
-alias node="cd ~/raisin_network_ws && sudo ./build/src/raisin/raisin_raiway/raisin_raiway_node"
-alias realnode="cd ~/raisin_network_ws && sudo ./build/src/raisin/raisin_raiway/raisin_raiway_node real"
+# rebuild (then restart the node: Server Off -> Server On)
+alias build="cd ~/raisin_raion_ws && raisin build -t release -i"
+# rebuild from scratch. install/ also holds the release packages, so only the build folder is removed
+alias cleanbuild="cd ~/raisin_raion_ws && rm -rf cmake-build-release && raisin build -t release -i"
+# run the node by hand (stop it first): simulation / real robot. sudo drops LD_LIBRARY_PATH, so env sets it
+alias node='cd ~/raisin_raion_ws && sudo env LD_LIBRARY_PATH=$HOME/raisin_raion_ws/install/lib ./install/bin/raisin_raiway_node'
+alias realnode='cd ~/raisin_raion_ws && sudo env LD_LIBRARY_PATH=$HOME/raisin_raion_ws/install/lib ./install/bin/raisin_raiway_node real'
 ```
 
 ----
 ## Useful commands
 ```
-sudo systemctl status raisin_raiway_node.service     # node status
-sudo systemctl stop raisin_raiway_node.service       # stop node (before running it by hand)
-journalctl -u raisin_raiway_node.service -f          # node log
+pgrep -a raisin_raiway                               # is the node running?
+sudo killall raisin_raiway_node                      # stop the node (same as Server Off)
+ls -t ~/raisin_raion_ws/log/raisin_raiway/ | head    # newest node logs (started by Server On)
 sudo systemctl restart raiway_create_ap.service      # restart hotspot
 ```

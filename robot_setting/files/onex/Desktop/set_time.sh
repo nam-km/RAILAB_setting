@@ -36,8 +36,10 @@ RC=$?
 # 3) delete old raisin logs. cd first, so rm never runs in the wrong dir.
 ssh $SSH_OPTS "$HOST" "
   SUDO=''; [ \"\$(id -u)\" -ne 0 ] && SUDO='sudo'
-  cd /home/raiway/raisin_network_ws/log/raisin_raiway/ || exit 1
-  \$SUDO rm -rf raisin_19*
-  echo 'removed raisin_19* logs'
+  # raisin_raion_ws, and the deprecated raisin_network_ws if it is still there
+  for d in /home/raiway/raisin_raion_ws/log/raisin_raiway /home/raiway/raisin_network_ws/log/raisin_raiway; do
+    [ -d \"\$d\" ] || continue
+    (cd \"\$d\" && \$SUDO rm -rf raisin_19*) && echo \"removed raisin_19* logs in \$d\"
+  done
 " || RC=$?
 finish $RC

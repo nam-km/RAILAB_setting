@@ -2,7 +2,7 @@
 Last Updated : 2026.11.05
 
 Set up a desktop PC on **Ubuntu 24.04** for raisim2, raisin, and RL training.
-This PC can't flash the Jetson: the CTI flash tools need a 20.04/22.04 host (see `robot_setting/Jetson_setting_2026.md`, Step 0). Use a 22.04 PC (`Linux_setting_22.md`) for that.
+This PC can't flash the Jetson: the CTI flash tools need a 20.04/22.04 host (see `robot_setting/Jetson_setting_ubuntu24.md`, Step 0). Use a 22.04 PC (`Linux_setting_22.md`) for that.
 
 This manual has only the 24.04-specific steps (3–9). The steps that are the same on every Ubuntu version are in `desktop_setting.md`: backup, Korean input, basic tools, GitHub, Claude Code, Terminator, Miniconda, apps, launchers, `~/.bashrc`. Follow the order at the top of `desktop_setting.md`.
 
@@ -191,7 +191,7 @@ sudo snap install clion --classic
 ----
 ## 9. Jetson flashing
 Not from this PC. sdkmanager runs on 24.04, but the CTI BSP flash script (`cti-flash.sh`) only supports 20.04/22.04 hosts.
-Flash from a 22.04 PC: `Linux_setting_22.md` step 9 and `robot_setting/Jetson_setting_2026.md`.
+Flash from a 22.04 PC: `Linux_setting_22.md` step 9 and `robot_setting/Jetson_setting_ubuntu24.md`.
 
 ----
 ## 10. ~/.bashrc

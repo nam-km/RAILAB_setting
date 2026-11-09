@@ -1,3 +1,7 @@
+# OneX Setting Manual (ROS2)
+
+**Old: raisin on ROS2 (`raisin_ws`, `ros2 run raisin_gui`).** For a new OneX use [Onex_setting_ubuntu24.md](Onex_setting_ubuntu24.md).
+
 ## Basic Setup
 
 1) install ubuntu

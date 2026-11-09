@@ -1,6 +1,8 @@
 # Jetson Setting Manual
 Last Updated : 2025.02.24
 
+**Old: Ubuntu 20.04 (JetPack 5.1.3), raisin on ROS2 foxy.** For a new robot PC use [Jetson_setting_ubuntu24.md](Jetson_setting_ubuntu24.md).
+
 ----
 ## step 0: Install sdkmanager to desktop
 - download sdkmanager: https://developer.nvidia.com/sdk-manager

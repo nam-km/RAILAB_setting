@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=raisin GUI
+Comment=Launch Raiway GUI (raisin_raion_ws)
+Exec=/home/raiway/Desktop/gui_raion.sh
+Icon=/home/raiway/.local/share/icons/raiway/server-03.png
+Terminal=false
+Type=Application
+Categories=Utility;
