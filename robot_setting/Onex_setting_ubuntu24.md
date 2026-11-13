@@ -1,5 +1,5 @@
 # OneX Setting Manual
-Last Updated : 2026.11.09
+Last Updated : 2026.11.13
 
 Set up the OneX (operator PC) on **Ubuntu 24.04**, same as the 2025 OneX.
 
@@ -108,11 +108,26 @@ sudo bash install_system_deps.sh
 ./raisin --install && source ~/.bashrc
 cp configuration_setting_example.yaml configuration_setting.yaml    # user_type: user, gh_tokens: {}
 git clone git@github.com:railabatkaist/raisin_raiway.git src/raisin_raiway
-raisin install raisin_gui --include-local    # the GUI and what src/raisin_raiway needs, from OTA
+```
+Release packages: **archive `1.0.305` (raisin 0.4.4)**, the same version as the robot (`Jetson_setting_ubuntu24.md` Step 10). Don't use the `stable` tag: on x86_64 it is `1.0.246` (raisin 0.3.16), which doesn't exist for the Jetson.
+The OneX needs `raisin`, `raisin_gui` and their dependencies: 8 packages (`raisin`, `raisin_gui`, `raisin_robot_packages`, `raisin_robot_properties`, `raisin_ros2_messages`, `raisin_third_party_common`, `raisin_third_party_gui`, `raisin_third_party_robot`). They also cover what `src/raisin_raiway` needs.
+
+a) From USB: make `raisin_release/controller/1.0.305/` with `robot_setting/files/raisin_release/fetch.py` on a PC with OTA access ("Offline install" in `raisin_manual.md`), then:
+```
+cd ~/raisin_raion_ws
+rm -rf release
+tar xzf /media/$USER/<usb>/raisin_release/controller/1.0.305/raisin-controller-ubuntu-24.04-x86_64-1.0.305.tar.gz -C ~/raisin_raion_ws
 sudo bash install_dependencies.sh
 raisin build -t release -i
 ```
-- The OTA server must know this PC's SSH key: send `ssh-keygen -lf ~/.ssh/id_ed25519.pub` to the Raion admin. Retry tips: Troubleshooting in `raisin_manual.md` at the root of this repo.
+b) From OTA:
+```
+raisin install raisin_gui --include-local --archive-version 1.0.305    # the GUI and what src/raisin_raiway needs
+sudo bash install_dependencies.sh
+raisin build -t release -i
+```
+- OTA needs this PC's SSH key registered: send `ssh-keygen -lf ~/.ssh/id_ed25519.pub` to the Raion admin. Retry tips: Troubleshooting in `raisin_manual.md` at the root of this repo.
+- `src/raisin_raiway` must have the raisin 0.4 changes (`run_mode` instead of `real_robot`), or the build fails.
 - Run the GUI with `libraiway_gui_compat.so` preloaded (the **raisin GUI** launcher does this). Without it, the released GUI's robot window aborts on raiway's joint names.
 - Don't copy the `raisin_network_ws` GUI config (`files/raisin/raisin_gui/params.yaml`, wlan0). The GUI reads `install/config/raisin_gui/config/params.yaml`, overlaid by `~/.raisin/raisin_gui/params.yaml` if that file exists.
 

@@ -1,5 +1,5 @@
 # Jetson Setting Manual
-Last Updated : 2026.11.09
+Last Updated : 2026.11.13
 
 How to set up a new robot PC (Ubuntu 24.04) from an empty board, matching the 2025 robot PC.
 raisin runs from `raisin_raion_ws` (Raion's raisin_master with OTA release packages).
@@ -262,8 +262,8 @@ sudo bash install_system_deps.sh
 source ~/.bashrc
 cp configuration_setting_example.yaml configuration_setting.yaml
 ```
-- In `configuration_setting.yaml`: `user_type: user` (stable release) or `devel` (latest), and `gh_tokens: {}` (the raiway repos are cloned with git below).
-2. OTA access: the OTA server must know this PC's SSH key (`~/.ssh/id_ed25519`). Send the fingerprint to the Raion admin:
+- In `configuration_setting.yaml`: `user_type: user`, and `gh_tokens: {}` (the raiway repos are cloned with git below). `user_type` only picks the default OTA tag; the robot pins an archive version instead (step 4).
+2. OTA access (only for installing from OTA in step 4): the OTA server must know this PC's SSH key (`~/.ssh/id_ed25519`). Send the fingerprint to the Raion admin:
 ```
 ssh-keygen -lf ~/.ssh/id_ed25519.pub
 ```
@@ -274,19 +274,35 @@ git clone git@github.com:railabatkaist/raisin_raiway.git
 git clone git@github.com:railabatkaist/raiway_plugin.git
 git clone git@github.com:railabatkaist/raiway_controller.git
 ```
-4. Release packages and the first build:
+- raisin 0.4 (archive 1.0.285 and later) needs the raiway code that uses `RunMode` instead of `isRealRobot` (`run_mode` in `params.yaml`). Code that still has `real_robot` builds only against raisin 0.3.
+4. Release packages and the first build. **Use archive `1.0.305` (raisin 0.4.4)**, the same version as the OneX: the robot and the OneX must run the same archive version.
+   - Why pinned: `ubuntu-24.04-arm64` has no `stable` tag on OTA (only `latest`), so `user_type: user` finds nothing. `latest` moves with every build, so pin the version number.
+   - The 7 packages the raiway src needs: `raisin`, `raisin_plugin`, `raisin_robot_packages`, `raisin_ros2_messages`, `raisin_third_party_common`, `raisin_third_party_gui`, `raisin_third_party_robot`.
+
+   **a) From USB (recommended; arm64 downloads from OTA are very slow).** On a PC with OTA access, make the tarball with `robot_setting/files/raisin_release/fetch.py` (see "Offline install" in `raisin_manual.md`), copy `raisin_release/jetson/1.0.305/` to a USB stick, then on the Jetson:
 ```
 cd ~/raisin_raion_ws
-raisin install                       # release packages that the src packages need, from OTA
-sudo bash install_dependencies.sh    # apt packages of every package
+rm -rf release                       # the tarball brings its own release/
+tar xzf /media/$USER/<usb>/raisin_release/jetson/1.0.305/raisin-jetson-ubuntu-24.04-arm64-1.0.305.tar.gz -C ~/raisin_raion_ws
+sudo bash install_dependencies.sh    # apt packages of every package (needs internet)
 raisin build -t release -i           # builds src/ and installs it to install/
 ```
-- Not tried on the Jetson yet: the OTA server must have aarch64 builds of the release packages (the `raisin` CLI supports aarch64).
-- If `raisin install` stops with `401 Unauthorized` or `IncompleteRead`, run it again (see Troubleshooting in `raisin_manual.md`).
+   - Check `manifest.json` next to the tarball: `sha256sum` of the tarball must match its `sha256`.
+
+   **b) From OTA:**
+```
+cd ~/raisin_raion_ws
+raisin install --archive-version 1.0.305   # release packages that the src packages need
+sudo bash install_dependencies.sh
+raisin build -t release -i
+```
+   - If `raisin install` stops with `401 Unauthorized` or `IncompleteRead`, run it again (see Troubleshooting in `raisin_manual.md`).
+   - Not tried on the Jetson yet, either way.
 5. Homing: the drives have no multi-turn encoder, so **home the robot after every boot of the robot PC**. Put the robot on the jig, `turn_on`, then `set_home` in the GUI (before `init_motor`). `init_motor` refuses until `set_home` has run in this boot.
    - The offsets go to `~/.raisin/homing.conf` of the user that runs the node (`/root/.raisin/` for root). `set_home` needs root, because it also writes `/run/.raisin_offset_sentinel`.
    - Don't copy `robot_setting/files/raisin/homing.conf`: it holds old offsets, and `set_home` writes a new `~/.raisin/homing.conf`. `files/raisin/raisin_gui/params.yaml` (wlan0) is for `raisin_network_ws` only.
 6. Start the node from the OneX with **Server On** (`Onex_setting_ubuntu24.md` section 8). It runs `install/scripts/raisin_raiway/scripts/raisin_up.sh` as root over ssh. Logs: `~/raisin_raion_ws/log/raisin_raiway/`.
+   - Run mode (raisin 0.4): `raisin_raiway_node real` or `raisin_raiway_node sim`. With no argument, `run_mode` in `src/raisin_raiway/config/params.yaml` decides (default `sim`). Any other word, or `replay`, stops the node at startup. The old `real_robot` parameter is gone.
 
 **Not working yet** (check before the first real-robot run):
 - **Real MicroStrain IMU.** raisin_raiway builds the real IMU driver only with `-DRAIWAY_WITH_MSCL=ON`, and that needs the MSCL headers, which the raion release doesn't ship (it has only `install/lib/libmscl.so`). Without it, `turn_on` with `real` stops with `Real MicroStrain IMU 'base_imu' needs the MSCL headers`.
